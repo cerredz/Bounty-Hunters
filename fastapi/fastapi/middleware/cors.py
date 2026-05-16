@@ -60,10 +60,13 @@ class DynamicCORSMiddleware(CORSMiddleware):
         headers = dict(self.preflight_headers)
         failures: list[str] = []
 
-        if await self._is_allowed_origin(requested_origin):
+        allowed_origin = await self._is_allowed_origin(requested_origin)
+        if allowed_origin:
             if self.preflight_explicit_allow_origin:
                 headers["Access-Control-Allow-Origin"] = requested_origin
         else:
+            if self.allow_origin_func is not None:
+                headers.pop("Access-Control-Allow-Origin", None)
             failures.append("origin")
 
         if requested_method not in self.allow_methods:
@@ -120,7 +123,10 @@ class DynamicCORSMiddleware(CORSMiddleware):
         headers.update(self.simple_headers)
         origin = request_headers["Origin"]
 
-        if self.allow_all_origins and self.allow_credentials:
+        if self.allow_origin_func is not None and not allowed_origin:
+            if "Access-Control-Allow-Origin" in headers:
+                del headers["Access-Control-Allow-Origin"]
+        elif self.allow_all_origins and self.allow_credentials:
             self.allow_explicit_origin(headers, origin)
         elif not self.allow_all_origins and allowed_origin:
             self.allow_explicit_origin(headers, origin)

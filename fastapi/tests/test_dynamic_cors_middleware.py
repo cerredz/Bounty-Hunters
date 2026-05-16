@@ -33,6 +33,33 @@ def test_dynamic_deny_origin() -> None:
     assert "access-control-allow-origin" not in response.headers
 
 
+def test_dynamic_deny_origin_overrides_wildcard_simple_headers() -> None:
+    app = create_app(
+        allow_origins=["*"],
+        allow_origin_func=lambda origin: origin == "https://allowed.example",
+    )
+    client = TestClient(app)
+    response = client.get("/ping", headers={"Origin": "https://denied.example"})
+    assert "access-control-allow-origin" not in response.headers
+
+
+def test_dynamic_deny_origin_overrides_wildcard_preflight_headers() -> None:
+    app = create_app(
+        allow_origins=["*"],
+        allow_origin_func=lambda origin: origin == "https://allowed.example",
+    )
+    client = TestClient(app)
+    response = client.options(
+        "/ping",
+        headers={
+            "Origin": "https://denied.example",
+            "Access-Control-Request-Method": "GET",
+        },
+    )
+    assert response.status_code == 400
+    assert "access-control-allow-origin" not in response.headers
+
+
 def test_async_allow_origin_callback() -> None:
     async def allow_origin(origin: str) -> bool:
         return origin == "https://async.example"
