@@ -1,3 +1,15 @@
+/**
+ * Context Protocol
+ * 
+ * - **Description**: Memory projections database projector for events.
+ * - **Purpose**: Projects incoming orchestration events directly onto in-memory read models returned by subscriptions.
+ * - **Architecture & Key Functions**:
+ *   1. projectEvent: Updates in-memory threads/projects collections by reducing incoming event payloads.
+ *   2. decodeForEvent: Helper decodes untyped network payloads safely back into schema types.
+ * - **Relation to codebase**: Reduces websocket and database events to in-memory state models in the backend.
+ * - **Similar files**: decider.ts, ProjectionPipeline.ts
+ */
+
 import type { OrchestrationEvent, OrchestrationReadModel, ThreadId } from "@t3tools/contracts";
 import {
   OrchestrationCheckpointSummary,
@@ -325,6 +337,7 @@ export function projectEvent(
               : {}),
             ...(payload.branch !== undefined ? { branch: payload.branch } : {}),
             ...(payload.worktreePath !== undefined ? { worktreePath: payload.worktreePath } : {}),
+            ...(payload.projectId !== undefined ? { projectId: payload.projectId } : {}),
             updatedAt: payload.updatedAt,
           }),
         })),

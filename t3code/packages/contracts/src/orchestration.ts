@@ -1,3 +1,16 @@
+/**
+ * Context Protocol
+ * 
+ * - **Description**: Type and schema contracts for orchestration commands and events.
+ * - **Purpose**: Centralizes the schemas, validation, and serialization contracts between the backend app server and the frontend web client.
+ * - **Architecture & Key Functions**:
+ *   1. Commands Schemas: Defines validation schemas for thread, project, and session command requests.
+ *   2. Events Schemas: Defines event structure payloads representing projected updates.
+ *   3. Shared Contracts: Exposes JSON-RPC endpoints, method definitions, and protocol envelopes.
+ * - **Relation to codebase**: Core library consumed by apps/web and apps/server to ensure strong API typecheck contracts.
+ * - **Similar files**: baseSchemas.ts, project.ts
+ */
+
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -521,6 +534,7 @@ const ThreadMetaUpdateCommand = Schema.Struct({
   modelSelection: Schema.optional(ModelSelection),
   branch: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
   worktreePath: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
+  projectId: Schema.optional(ProjectId),
 });
 
 const ThreadRuntimeModeSetCommand = Schema.Struct({
@@ -861,6 +875,7 @@ export const ThreadMetaUpdatedPayload = Schema.Struct({
   modelSelection: Schema.optional(ModelSelection),
   branch: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
   worktreePath: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
+  projectId: Schema.optional(ProjectId),
   updatedAt: IsoDateTime,
 });
 

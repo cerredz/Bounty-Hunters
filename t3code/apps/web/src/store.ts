@@ -1,3 +1,16 @@
+/**
+ * Context Protocol
+ * 
+ * - **Description**: Frontend application state store managed with Zustand.
+ * - **Purpose**: Manages application-wide states, environments bookkeeping, and processes server websocket events to update read models.
+ * - **Architecture & Key Functions**:
+ *   1. EnvironmentState / AppState: Types representing physical projects and thread read models in memory.
+ *   2. ensureThreadRegistered: Correctly adds thread references and manages transition between folder projects.
+ *   3. writeThreadState / updateThreadState: Writes detailed states and cleans old references structurally.
+ * - **Relation to codebase**: Central source of truth for the entire client application UI.
+ * - **Similar files**: uiStateStore.ts, terminalStateStore.ts
+ */
+
 import type {
   EnvironmentId,
   MessageId,
@@ -1292,8 +1305,8 @@ function applyEnvironmentOrchestrationEvent(
         updatedAt: event.payload.updatedAt,
       }));
 
-    case "thread.meta-updated":
-      return updateThreadState(state, event.payload.threadId, (thread) => ({
+    case "thread.meta-updated": {
+      let nextState = updateThreadState(state, event.payload.threadId, (thread) => ({
         ...thread,
         ...(event.payload.title !== undefined ? { title: event.payload.title } : {}),
         ...(event.payload.modelSelection !== undefined
@@ -1303,8 +1316,29 @@ function applyEnvironmentOrchestrationEvent(
         ...(event.payload.worktreePath !== undefined
           ? { worktreePath: event.payload.worktreePath }
           : {}),
+        ...(event.payload.projectId !== undefined ? { projectId: event.payload.projectId } : {}),
         updatedAt: event.payload.updatedAt,
       }));
+
+      const currentSummary = nextState.sidebarThreadSummaryById[event.payload.threadId];
+      if (currentSummary) {
+        nextState = {
+          ...nextState,
+          sidebarThreadSummaryById: {
+            ...nextState.sidebarThreadSummaryById,
+            [event.payload.threadId]: {
+              ...currentSummary,
+              ...(event.payload.title !== undefined ? { title: event.payload.title } : {}),
+              ...(event.payload.branch !== undefined ? { branch: event.payload.branch } : {}),
+              ...(event.payload.worktreePath !== undefined ? { worktreePath: event.payload.worktreePath } : {}),
+              ...(event.payload.projectId !== undefined ? { projectId: event.payload.projectId } : {}),
+              ...(event.payload.updatedAt !== undefined ? { updatedAt: event.payload.updatedAt } : {}),
+            },
+          },
+        };
+      }
+      return nextState;
+    }
 
     case "thread.runtime-mode-set":
       return updateThreadState(state, event.payload.threadId, (thread) => ({

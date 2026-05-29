@@ -1,3 +1,15 @@
+/**
+ * Context Protocol
+ * 
+ * - **Description**: DB event projection pipeline processing orchestration events.
+ * - **Purpose**: Listens to event store updates and maps event payloads back into projected relational SQLite read model tables.
+ * - **Architecture & Key Functions**:
+ *   1. startProjectionPipeline: Background worker routing events to projection repositories.
+ *   2. thread.meta-updated: Reduces title/branch/worktree/project changes to the ProjectionThread SQLite table.
+ * - **Relation to codebase**: Syncs SQLite read models in the backend based on new event stream states.
+ * - **Similar files**: projector.ts, ProjectionThreads.ts
+ */
+
 import {
   ApprovalRequestId,
   type ChatAttachment,
@@ -634,6 +646,9 @@ const makeOrchestrationProjectionPipeline = Effect.fn("makeOrchestrationProjecti
             ...(event.payload.branch !== undefined ? { branch: event.payload.branch } : {}),
             ...(event.payload.worktreePath !== undefined
               ? { worktreePath: event.payload.worktreePath }
+              : {}),
+            ...(event.payload.projectId !== undefined
+              ? { projectId: event.payload.projectId }
               : {}),
             updatedAt: event.payload.updatedAt,
           });

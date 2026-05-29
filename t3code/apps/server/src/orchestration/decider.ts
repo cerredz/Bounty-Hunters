@@ -1,3 +1,15 @@
+/**
+ * Context Protocol
+ * 
+ * - **Description**: Core business logic decider for orchestration commands and events.
+ * - **Purpose**: Directs aggregate command validations (invariants check) and translates valid commands into persisted event projections.
+ * - **Architecture & Key Functions**:
+ *   1. commandToEvent: Pure decider mapping commands to events with exact schema and database validations.
+ *   2. requireThread/requireProject: Invariant check helpers ensuring reference integrity prior to action.
+ * - **Relation to codebase**: Backend engine for processing websocket commands dispatched by frontends.
+ * - **Similar files**: projector.ts, commandInvariants.ts
+ */
+
 import type {
   OrchestrationCommand,
   OrchestrationEvent,
@@ -314,6 +326,7 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
             : {}),
           ...(command.branch !== undefined ? { branch: command.branch } : {}),
           ...(command.worktreePath !== undefined ? { worktreePath: command.worktreePath } : {}),
+          ...(command.projectId !== undefined ? { projectId: command.projectId } : {}),
           updatedAt: occurredAt,
         },
       };
